@@ -1,0 +1,9 @@
+langchain-community
+# Core Dependencies
+openai
+langchain
+langchain-core
+langchain-openai
+langgraph
+langgraph-supervisor
+python-dotenv

@@ -5,18 +5,13 @@ from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
 from langchain_community.agent_toolkits import SQLDatabaseToolkit
 from langchain_community.utilities import SQLDatabase
-from langchain_core.messages import HumanMessage
 from langchain_core.tools import tool
-from langchain_openai import ChatOpenAI
-from langgraph.constants import START
 from langgraph.graph import MessagesState, StateGraph
-from langgraph.types import Command
 
-from fetch_player_statistics import create_player_statistics_agent
-from hierarchichal_agent_utils import make_supervisor_node, State
+from constants import LLM_MODEL, LLM_PROVIDER
 
 
-def create_fetch_current_squad_agent():
+def create_cricket_analyst_agent():
     db = SQLDatabase.from_uri("sqlite:///db/cricket.db")
     system_prompt = """
         You are an agent designed to interact with a SQL database.
@@ -54,10 +49,10 @@ def create_fetch_current_squad_agent():
         
         """.format(dialect=db.dialect,top_k=5)
 
-    llm = init_chat_model(model="gpt-4o", model_provider="openai", temperature=0)
+    llm = init_chat_model(model=LLM_MODEL, model_provider=LLM_PROVIDER, temperature=0)
     toolkit = SQLDatabaseToolkit(db=db, llm=llm)
     tools = [*toolkit.get_tools(), sort_players_based_on_performance]
-    return create_agent(model=llm, tools=tools, system_prompt=system_prompt, name="fetch_current_squad_agent", state_schema=MessagesState)
+    return create_agent(model=llm, tools=tools, system_prompt=system_prompt, name="cricket_analyst_agent", state_schema=MessagesState)
 
 @tool
 def sort_players_based_on_performance(players_performance: List[dict[str, object]], sort_by:List[str]) -> List[dict[str, object]]:
@@ -70,9 +65,9 @@ def sort_players_based_on_performance(players_performance: List[dict[str, object
 
 def main():
     load_dotenv()
-    current_squad_agent = create_fetch_current_squad_agent()
+    current_squad_agent = create_cricket_analyst_agent()
     # player_statistics_agent = create_player_statistics_agent()
-    question = "Who has picked the most wickets for CSK in last two years?."
+    question = "Who has scored the most runs for CSK during 2024 and 2025?"
     for step in current_squad_agent.stream({"messages": [{"role": "user", "content": question}]}, stream_mode="values"):
         step["messages"][-1].pretty_print()
 

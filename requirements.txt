@@ -1,3 +1,4 @@
+pydantic
 langchain-community
 # Core Dependencies
 openai

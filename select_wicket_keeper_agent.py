@@ -2,8 +2,10 @@ from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
 from langchain_community.agent_toolkits import SQLDatabaseToolkit
-from langgraph.prebuilt import create_react_agent
 from langchain_community.utilities import SQLDatabase
+
+from constants import LLM_MODEL, LLM_PROVIDER
+from ranker import compute_batting_performance, rank_list_of_players_based_on_by_field
 
 def create_best_wicket_keeper_agent():
     db = SQLDatabase.from_uri("sqlite:///db/cricket.db")
@@ -32,15 +34,15 @@ def create_best_wicket_keeper_agent():
         3. Compute strike rate of each batsman by using balls_faced total_runs fields.
         4. Fetch number of times each wicket keeper got out by running a query.
         5. Compute batting average by dividing total_runs by no of times the batsman got out.
-        4. Compute the performance index by using the formula: PerformanceIndex = 0.4 * average + 0.6 * strike_rate
-        5. Sort the wicket keepers based on the performance index. 
-        6. return the top 1 result in JSON format with fields player_name, average, strike_rate, performance_index.
+        6. Compute batting_performance_index
+        7. Format the data in JSON format and rank teh players. 
+        8. return the top 1 result in JSON format with fields player_name, average, strike_rate, performance_index.
         
         """.format(dialect=db.dialect,top_k=5)
 
-    llm = init_chat_model(model="gpt-4o", model_provider="openai")
+    llm = init_chat_model(model=LLM_MODEL, model_provider=LLM_PROVIDER)
     toolkit = SQLDatabaseToolkit(db=db, llm=llm)
-    tools = toolkit.get_tools()
+    tools = [*toolkit.get_tools(), compute_batting_performance, rank_list_of_players_based_on_by_field]
     return create_agent(model=llm, tools=tools, system_prompt=system_prompt, name="select_best_wicket_keeper_agent")
 
 

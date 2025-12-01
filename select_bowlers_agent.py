@@ -4,6 +4,10 @@ from langchain.chat_models import init_chat_model
 from langchain_community.agent_toolkits import SQLDatabaseToolkit
 from langchain_community.utilities import SQLDatabase
 
+from constants import LLM_MODEL, LLM_PROVIDER
+from ranker import compute_bowling_performance, rank_list_of_players_based_on_by_field
+
+
 def create_pick_top_bowlers_agent():
     db = SQLDatabase.from_uri("sqlite:///db/cricket.db")
     system_prompt = """
@@ -30,14 +34,16 @@ def create_pick_top_bowlers_agent():
         2. Fetch number of balls bowled and number of runs conceded by each bowler in the current squad by running a query like (select batter, SUM(runs_conceded_by_bowler) as runs_conceded, COUNT(*) as balls_bowled  from ball_to_ball_data where bowler IN ('Hazlewood', 'B Kumar') group by bowler 
         3. Count number of wickets took by each bowler by running a sql query like (select bowler, count(name_of_the_player_got_out) as number_of_wickets from ball_to_ball_data group where name_of_the_player_got_out is not null by bowler order by bowler). 
         4. Compute number of overs bowled by diving number of balls bowled by 6.
-        5. Compute bowler's strike rate and bowler's average.
-        6. return the top 10 result in JSON format with fields player_name, average, strike_rate, economy, balls_bowled, runs_conceded.
+        5. Compute bowler's strike rate bowler's average.
+        6. Compute bowling_performance_index for all bowlers
+        8. Format data in JSON format rank all players by bowling_performance_index in ascending order. 
+        7. Format the player's performance in JSON format metrics in JSON format with fields player_name, average, strike_rate, economy, balls_bowled, runs_conceded (DEFAULT N is 4).
         """.format(dialect=db.dialect,top_k=5)
 
-    llm = init_chat_model(model="gpt-4o", model_provider="openai")
+    llm = init_chat_model(model=LLM_MODEL, model_provider=LLM_PROVIDER)
     toolkit = SQLDatabaseToolkit(db=db, llm=llm)
-    tools = toolkit.get_tools()
-    return create_agent(model=llm, tools=tools, system_prompt=system_prompt, name="pick_top_bowlers_agent")
+    tools = [*toolkit.get_tools(), compute_bowling_performance, rank_list_of_players_based_on_by_field]
+    return create_agent(model=llm, tools=tools, system_prompt=system_prompt, name="select_bowlers_agent")
 
 
 def main():

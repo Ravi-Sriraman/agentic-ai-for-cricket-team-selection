@@ -1,3 +1,7 @@
 .idea
 .venv
 agentic-cricket-team-selection.iml
+.env
+./__pycache__/
+*.pyc
+abc.json

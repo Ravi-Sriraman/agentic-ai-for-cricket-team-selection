@@ -7,6 +7,8 @@ source ./venv/bin/activate
 ./venv/bin/pip install -r requirements.txt
 sudo apt install -y sqlite3
 export DATABASE_URL=sqlite:///db/cricket.db
+./venv/bin/python3 download_dataset.py
+sudo unzip ./data/ipl_json.zip
 ./venv/bin/python3 setup_data.py
 sqlite update_team_names.sql
 ./venv/bin/python3 evaluate_team_selector.py

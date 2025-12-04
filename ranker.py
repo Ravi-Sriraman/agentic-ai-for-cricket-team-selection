@@ -6,6 +6,7 @@ from langchain_core.tools import tool
 
 from typing import List, Dict, Any
 from pydantic import BaseModel
+from config import BATTING_WEIGHTS, BOWLING_WEIGHTS
 
 class SortInput(BaseModel):
     """Input schema for ranking a list of players by a particular numeric field."""
@@ -34,27 +35,115 @@ class PlayerStats:
     all_round_performance_index: float = field(default=0.0)
 
 @tool
-def compute_batting_performance(batting_strike_rate, batting_average, player_name) -> float:
-    """Computes batting_performance_index given batting_strike_rate, batting_average, player_name"""
-    return 0.6 * batting_strike_rate + 0.4 * batting_average
+def compute_batting_performance(batting_strike_rate, batting_average, player_name, alpha: float = 0.5) -> float:
+    """
+    Computes Batting Performance Factor (BPF) using the formula:
+    BPF = (Batting Strike Rate)^α × (Batting Average)^(1-α)
+
+    Reference: "A Balanced Squad for Indian Premier League Using Modified NSGA-II"
+
+    Args:
+        batting_strike_rate: Player's batting strike rate
+        batting_average: Player's batting average
+        player_name: Name of the player
+        alpha: Weight factor between 0 and 1 (default: 0.5 for equal weighting)
+
+    Returns:
+        BPF value (higher is better)
+    """
+    if batting_strike_rate and batting_average and batting_strike_rate > 0 and batting_average > 0:
+        # BPF = (SR)^α × (Avg)^(1-α)
+        bpf = (batting_strike_rate ** alpha) * (batting_average ** (1 - alpha))
+        return bpf
+    return 0
 
 @tool
-def compute_bowling_performance(bowling_average, bowling_economy, player_name) -> float:
-    """given bowling_economy, player_name, and bowling average computes bowling_performance_index"""
-    return 0.14 * bowling_average + 0.86 * bowling_economy
+def compute_bowling_performance(bowling_average, bowling_economy, bowling_strike_rate, player_name) -> float:
+    """
+    Computes Combined Bowling Rate (CBR) using the formula:
+    CBR = 1 / (1/Bowling_Average + 1/Economy_Rate + 1/Strike_Rate)
+
+    Reference: "A Balanced Squad for Indian Premier League Using Modified NSGA-II"
+
+    Args:
+        bowling_average: Player's bowling average (runs per wicket)
+        bowling_economy: Player's economy rate (runs per over)
+        bowling_strike_rate: Player's bowling strike rate (balls per wicket)
+        player_name: Name of the player
+
+    Returns:
+        CBR value (lower is better for bowlers)
+    """
+    if bowling_economy and bowling_average and bowling_strike_rate:
+        if bowling_economy > 0 and bowling_average > 0 and bowling_strike_rate > 0:
+            try:
+                # CBR = 1 / (1/A + 1/E + 1/S)
+                cbr = 1.0 / ((1.0/bowling_average) + (1.0/bowling_economy) + (1.0/bowling_strike_rate))
+                return cbr
+            except ZeroDivisionError:
+                return 0
+    return 0
 
 @tool
-def compute_all_round_performance(batting_strike_rate, batting_average, player_name, bowling_average, bowling_economy) -> float:
-    """Given batting_strike_rate, batting_average, player_name, bowling_economy, player_name, and bowling average, computes all_round_performance_index """
-    return 0.5 * (0.6 * batting_strike_rate + 0.4 * batting_average) + 0.5 * (0.14 * bowling_average + 0.86 * bowling_economy)
+def compute_all_round_performance(batting_strike_rate, batting_average, player_name,
+                                  bowling_average, bowling_economy, bowling_strike_rate,
+                                  alpha: float = 0.5) -> float:
+    """
+    Computes all-rounder performance index using BPF and CBR.
+
+    For all-rounders, combines both batting and bowling performances:
+    - BPF = (Batting Strike Rate)^α × (Batting Average)^(1-α)
+    - CBR = 1 / (1/Bowling_Average + 1/Economy_Rate + 1/Strike_Rate)
+
+    All-rounder Index = (BPF + 1/CBR) / 2
+
+    Note: We use 1/CBR for bowling since lower CBR is better, but we want
+    higher values to indicate better performance for consistency.
+
+    Args:
+        batting_strike_rate: Player's batting strike rate
+        batting_average: Player's batting average
+        player_name: Name of the player
+        bowling_average: Player's bowling average
+        bowling_economy: Player's economy rate
+        bowling_strike_rate: Player's bowling strike rate
+        alpha: Weight factor for BPF (default: 0.5)
+
+    Returns:
+        All-rounder performance index
+    """
+    has_batting = batting_strike_rate and batting_average and batting_strike_rate > 0 and batting_average > 0
+    has_bowling = bowling_average and bowling_economy and bowling_strike_rate and \
+                  bowling_average > 0 and bowling_economy > 0 and bowling_strike_rate > 0
+
+    if not has_batting and not has_bowling:
+        return 0.0
+
+    # Calculate BPF
+    bpf = 0
+    if has_batting:
+        bpf = (batting_strike_rate ** alpha) * (batting_average ** (1 - alpha))
+
+    # Calculate CBR
+    cbr = 0
+    if has_bowling:
+        cbr = 1.0 / ((1.0/bowling_average) + (1.0/bowling_economy) + (1.0/bowling_strike_rate))
+
+    # If only batting or only bowling, return respective performance
+    if not has_batting:
+        return 1.0 / cbr if cbr > 0 else 0  # Inverse of CBR for consistency
+    elif not has_bowling:
+        return bpf
+
+    # For true all-rounders, combine both (equal weighting)
+    # Using 1/CBR since lower CBR is better
+    bowling_component = 1.0 / cbr if cbr > 0 else 0
+    all_rounder_index = 0.5 * bpf + 0.5 * bowling_component
+
+    return all_rounder_index
 
 @tool("rank_players", args_schema=SortInput)
-def rank_list_of_objects_based_on_by_field(players :List[Dict[str, Any]], by: str) -> List[Dict[str, Any]]:
-    """Ranks a list of players based on a field and returns the list of players ranked based on that field"""
-    return sorted(players, key=lambda obj: obj[by], reverse=True)
-
-@tool("rank_players", args_schema=SortInput)
-def rank_list_of_players_based_on_by_field(
+def rank_list_of_players_by_field(
         players: List[Dict[str, Any]],
         by: str,
         descending: bool = True,
@@ -152,9 +241,6 @@ def main():
     ]
 
     # print(rank_all_rounders(all_rounder_stats))
-
-
-
 
 if __name__ == '__main__':
     main()

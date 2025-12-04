@@ -1,6 +1,6 @@
+# Core Dependencies
 pydantic
 langchain-community
-# Core Dependencies
 openai
 langchain
 langchain-core
@@ -8,3 +8,8 @@ langchain-openai
 langgraph
 langgraph-supervisor
 python-dotenv
+
+# Testing Dependencies
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-mock>=3.11.1

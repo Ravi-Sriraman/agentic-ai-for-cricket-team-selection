@@ -72,6 +72,11 @@ def main():
         step["messages"][-1].pretty_print()
 
 
-
 if __name__ == '__main__':
-    main()
+    # main()
+    db = SQLDatabase.from_uri("sqlite:///db/cricket.db")
+    llm = init_chat_model(model=LLM_MODEL, model_provider=LLM_PROVIDER, temperature=0)
+    toolkit = SQLDatabaseToolkit(db=db, llm=llm)
+    for tool in toolkit.get_tools():
+        print(tool)
+    # QuerySQLDatabaseTool,

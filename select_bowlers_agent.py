@@ -5,7 +5,7 @@ from langchain_community.agent_toolkits import SQLDatabaseToolkit
 from langchain_community.utilities import SQLDatabase
 
 from constants import LLM_MODEL, LLM_PROVIDER
-from ranker import compute_bowling_performance, rank_list_of_players_based_on_by_field
+from ranker import compute_bowling_performance, rank_list_of_players_by_field
 
 
 def create_pick_top_bowlers_agent():
@@ -42,7 +42,7 @@ def create_pick_top_bowlers_agent():
 
     llm = init_chat_model(model=LLM_MODEL, model_provider=LLM_PROVIDER)
     toolkit = SQLDatabaseToolkit(db=db, llm=llm)
-    tools = [*toolkit.get_tools(), compute_bowling_performance, rank_list_of_players_based_on_by_field]
+    tools = [*toolkit.get_tools(), compute_bowling_performance, rank_list_of_players_by_field]
     return create_agent(model=llm, tools=tools, system_prompt=system_prompt, name="select_bowlers_agent")
 
 

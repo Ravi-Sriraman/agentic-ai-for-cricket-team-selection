@@ -8,7 +8,6 @@ from select_batsmen_agent import create_pick_top_batsmen_agent
 from select_bowlers_agent import create_pick_top_bowlers_agent
 from select_wicket_keeper_agent import create_best_wicket_keeper_agent
 from select_all_rounders_agent import create_pick_top_all_rounders_agent
-from cricket_analyst_agent import create_cricket_analyst_agent
 
 def create_supervisor_agent():
     llm = init_chat_model(model=LLM_MODEL, model_provider=LLM_PROVIDER, temperature=0)
@@ -16,7 +15,6 @@ def create_supervisor_agent():
     select_bowlers_agent = create_pick_top_bowlers_agent()
     select_all_rounders_agent = create_pick_top_all_rounders_agent()
     select_batsmen_agent = create_pick_top_batsmen_agent()
-    cricket_analyst_agent = create_cricket_analyst_agent()
     return create_supervisor(
         agents=[select_wicket_keeper_agent, select_bowlers_agent, select_batsmen_agent, select_all_rounders_agent],
         model=llm,

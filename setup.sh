@@ -12,6 +12,6 @@ export DATABASE_URL=sqlite:///db/cricket.db
 ./venv/bin/python3 download_dataset.py
 unzip -y ./data/ipl_json.zip -d ./data/ipl_json
 ./venv/bin/python3 setup_data.py
-sqlite3 cricet.db update_team_names.sql
+sudo sqlite3 db/cricket.db < update_team_names.sql
 ./venv/bin/python3 evaluate_team_selector.py
 ./venv/bin/python3 evaluate_cricket_analyst.py

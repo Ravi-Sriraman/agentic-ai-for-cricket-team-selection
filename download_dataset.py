@@ -5,8 +5,10 @@ import requests
 
 def main():
     response = requests.get("https://cricsheet.org/downloads/ipl_json.zip")
-    os.mkdir("data")
-    with open("data/ipl_json.zip", "rb") as f:
+    if not os.path.exists("./data"):
+        os.mkdir("data")
+        os.mkdir("data/ipl_json")
+    with open("./data/ipl_json.zip", "wb") as f:
         f.write(response.content)
 
 if __name__ == '__main__':

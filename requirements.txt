@@ -8,6 +8,7 @@ langchain-openai
 langgraph
 langgraph-supervisor
 python-dotenv
+pandas
 
 # Testing Dependencies
 pytest>=7.4.0

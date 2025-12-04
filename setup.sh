@@ -1,4 +1,5 @@
 sudo apt update -y
+sudo apt install -y unzip
 sudo apt install -y python3
 sudo apt install -y python3-pip
 sudo apt install -y python3-virtualenv

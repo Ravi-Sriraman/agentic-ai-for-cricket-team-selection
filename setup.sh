@@ -3,6 +3,7 @@ sudo apt install -y unzip
 sudo apt install -y python3
 sudo apt install -y python3-pip
 sudo apt install -y python3-virtualenv
+mkdir output
 sudo virtualenv venv
 source ./venv/bin/activate
 ./venv/bin/pip install -r requirements.txt

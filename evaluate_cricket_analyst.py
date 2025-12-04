@@ -41,7 +41,7 @@ class CricketAnalystEvaluator:
         test_cases = [
             {
                 "name": "Player Batting Statistics",
-                "query": "What is Virat Kohli's batting average and strike rate?",
+                "query": "What is V Kohli's batting average and strike rate?",
                 "category": "player_stats",
                 "expected_keywords": ["kohli", "average", "strike rate"],
                 "expected_sql_queries": 2,  # Expected minimum SQL queries
@@ -69,14 +69,14 @@ class CricketAnalystEvaluator:
             },
             {
                 "name": "Bowler Statistics",
-                "query": "What is Jasprit Bumrah's bowling average and economy rate?",
+                "query": "What is JJ Bumrah's bowling average and economy rate?",
                 "category": "bowling_stats",
                 "expected_keywords": ["bumrah", "average", "economy"],
                 "expected_sql_queries": 2,
             },
             {
                 "name": "Complex Multi-Step Query",
-                "query": "Compare the batting averages of Rohit Sharma and Virat Kohli in IPL 2024",
+                "query": "Compare the batting averages of RG Sharma and V Kohli in IPL 2024",
                 "category": "comparison",
                 "expected_keywords": ["rohit", "kohli", "2024", "average"],
                 "expected_sql_queries": 3,

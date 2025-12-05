@@ -2,7 +2,7 @@
 
 #Set environment variables
 export DATABASE_URL=sqlite:///db/cricket.db
-export OPENAI_API_KEY=
+#export OPENAI_API_KEY=
 export USER_AGENT=Ravi
 
 sudo apt update -y

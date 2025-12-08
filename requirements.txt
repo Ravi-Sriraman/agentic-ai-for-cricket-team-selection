@@ -9,6 +9,7 @@ langgraph
 langgraph-supervisor
 python-dotenv
 pandas
+matplotlib
 bs4
 
 # Testing Dependencies
